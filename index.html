@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Globe</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #000;
+        }
+        canvas {
+            border-radius: 50%;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="globeCanvas"></canvas>
+    <script src="https://unpkg.com/cobe@1.2.0"></script>
+    <script>
+        const canvas = document.getElementById('globeCanvas');
+        const GLOBE_CONFIG = {
+            width: 800,
+            height: 800,
+            onRender: () => {},
+            devicePixelRatio: 2,
+            phi: 0,
+            theta: 0.3,
+            dark: 0,
+            diffuse: 0.4,
+            mapSamples: 16000,
+            mapBrightness: 1.2,
+            baseColor: [1, 1, 1],
+            markerColor: [251 / 255, 100 / 255, 21 / 255],
+            glowColor: [1, 1, 1],
+            markers: [
+                { location: [14.5995, 120.9842], size: 0.03 },
+                { location: [19.076, 72.8777], size: 0.1 },
+                { location: [23.8103, 90.4125], size: 0.05 },
+                { location: [30.0444, 31.2357], size: 0.07 },
+                { location: [39.9042, 116.4074], size: 0.08 },
+                { location: [-23.5505, -46.6333], size: 0.1 },
+                { location: [19.4326, -99.1332], size: 0.1 },
+                { location: [40.7128, -74.006], size: 0.1 },
+                { location: [34.6937, 135.5022], size: 0.05 },
+                { location: [41.0082, 28.9784], size: 0.06 },
+            ],
+        };
+
+        let phi = 0;
+        const pointerInteracting = { current: null };
+        const pointerInteractionMovement = { current: 0 };
+        
+        const { createGlobe } = COBE;
+
+        const onRender = (state) => {
+            if (!pointerInteracting.current) phi += 0.005;
+            state.phi = phi + pointerInteractionMovement.current;
+            state.width = GLOBE_CONFIG.width * 2;
+            state.height = GLOBE_CONFIG.height * 2;
+        };
+
+        const globe = createGlobe(canvas, {
+            ...GLOBE_CONFIG,
+            onRender
+        });
+
+        canvas.addEventListener('pointerdown', (e) => {
+            pointerInteracting.current = e.clientX - pointerInteractionMovement.current;
+            canvas.style.cursor = 'grabbing';
+        });
+
+        canvas.addEventListener('pointerup', () => {
+            pointerInteracting.current = null;
+            canvas.style.cursor = 'grab';
+        });
+
+        canvas.addEventListener('pointerout', () => {
+            pointerInteracting.current = null;
+            canvas.style.cursor = 'grab';
+        });
+
+        canvas.addEventListener('mousemove', (e) => {
+            if (pointerInteracting.current !== null) {
+                const delta = e.clientX - pointerInteracting.current;
+                pointerInteractionMovement.current = delta / 200;
+            }
+        });
+
+        canvas.addEventListener('touchmove', (e) => {
+            if (e.touches[0] && pointerInteracting.current !== null) {
+                const delta = e.touches[0].clientX - pointerInteracting.current;
+                pointerInteractionMovement.current = delta / 200;
+            }
+        });
+
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
+
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    </script>
+</body>
+</html>
+
